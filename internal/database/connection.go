@@ -3,6 +3,7 @@ package database
 import (
 	"fmt"
 	"go-todo-list/internal/helper"
+	"go-todo-list/internal/model"
 
 	"gorm.io/driver/mysql"
 	"gorm.io/gorm"
@@ -22,11 +23,16 @@ func NewConnection(envPath string) (*gorm.DB, error) {
 		env["DB_PORT"],
 		env["DB_NAME"],
 	)
-	
+
 	db, err := gorm.Open(mysql.Open(dsn), &gorm.Config{})
 	if err != nil {
 		return db, err
 	}
+
+	db.AutoMigrate(
+		&model.User{},
+		&model.Todo{},
+	)
 
 	return db, nil
 }
