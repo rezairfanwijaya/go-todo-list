@@ -7,6 +7,7 @@ import (
 	"go-todo-list/internal/model"
 	"go-todo-list/internal/repository/user"
 	"net/http"
+	"strconv"
 
 	"firebase.google.com/go/v4/auth"
 )
@@ -59,4 +60,28 @@ func (u *userUsecase) SignUp(inputSignUp model.InputUserSignup) (model.User, int
 	}
 
 	return userSaved, http.StatusOK, nil
+}
+
+func (u *userUsecase) SignIn(inputSignIn model.InputSignIn) (model.User, string, int, error) {
+	var customToken string
+	userByEmail, err := u.userRepo.GetUserByEmail(inputSignIn.Email)
+	if err != nil {
+		return model.User{}, customToken, http.StatusInternalServerError, err
+	}
+
+	if userByEmail.ID == 0 {
+		return model.User{}, customToken, http.StatusNotFound, errors.New("email not registered")
+	}
+
+	if err := helper.VerifyPassword(inputSignIn.Password, userByEmail.Password); err != nil {
+		return model.User{}, customToken, http.StatusBadRequest, errors.New("invalid password")
+	}
+
+	stringID := strconv.Itoa(int(userByEmail.ID))
+	customToken, err = u.fireAuth.CustomToken(context.Background(), stringID)
+	if err != nil {
+		return model.User{}, customToken, http.StatusInternalServerError, err
+	}
+
+	return userByEmail, customToken, http.StatusOK, nil
 }

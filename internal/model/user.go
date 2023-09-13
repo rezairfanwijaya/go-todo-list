@@ -12,7 +12,18 @@ type InputUserSignup struct {
 	Password string `json:"password" binding:"required,min=8"`
 }
 
+type InputSignIn struct {
+	Email    string `json:"email" binding:"required,email"`
+	Password string `json:"password" binding:"required,min=8"`
+}
+
 type FormatUserSignUp struct {
 	ID    uint   `json:"id"`
 	Email string `json:"email"`
+}
+
+type FormatUserSignIn struct {
+	ID    uint   `json:"id"`
+	Email string `json:"email"`
+	Token string `json:"token"`
 }

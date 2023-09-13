@@ -15,4 +15,5 @@ func InitRouter(dbConnection *gorm.DB, router *gin.Engine, authClient *auth.Clie
 	userDelivery := NewUserHandler(userUsecase)
 
 	router.POST("/signup", userDelivery.SignUp)
+	router.POST("/signin", userDelivery.SignIn)
 }

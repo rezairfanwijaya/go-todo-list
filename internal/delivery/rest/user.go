@@ -55,3 +55,40 @@ func (h *UserHandler) SignUp(c *gin.Context) {
 
 	c.JSON(http.StatusOK, response)
 }
+
+func (h *UserHandler) SignIn(c *gin.Context) {
+	var inputSignIn model.InputSignIn
+
+	if err := c.ShouldBindJSON(&inputSignIn); err != nil {
+		errBinding := helper.GenerateErrorBinding(err)
+		response := helper.GenerateResponseAPI(
+			"error",
+			http.StatusBadRequest,
+			errBinding,
+		)
+
+		c.JSON(http.StatusBadRequest, response)
+		return
+	}
+
+	userLoggedIn, customToken, httpCode, err := h.userUsecase.SignIn(inputSignIn)
+	if err != nil {
+		response := helper.GenerateResponseAPI(
+			"error",
+			httpCode,
+			err.Error(),
+		)
+
+		c.JSON(httpCode, response)
+		return
+	}
+
+	userLoggedInFormatted := user.ForamtUserSignIn(userLoggedIn, customToken)
+	response := helper.GenerateResponseAPI(
+		"success",
+		http.StatusOK,
+		userLoggedInFormatted,
+	)
+
+	c.JSON(http.StatusOK, response)
+}
