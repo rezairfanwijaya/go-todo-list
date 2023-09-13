@@ -8,6 +8,7 @@ require (
 	github.com/go-playground/validator/v10 v10.14.0
 	github.com/joho/godotenv v1.5.1
 	github.com/stretchr/testify v1.8.4
+	golang.org/x/crypto v0.9.0
 	google.golang.org/api v0.114.0
 	gorm.io/driver/mysql v1.5.1
 	gorm.io/gorm v1.25.4
@@ -21,6 +22,7 @@ require (
 	cloud.google.com/go/iam v0.13.0 // indirect
 	cloud.google.com/go/longrunning v0.4.1 // indirect
 	cloud.google.com/go/storage v1.30.1 // indirect
+	github.com/DATA-DOG/go-sqlmock v1.5.0 // indirect
 	github.com/MicahParks/keyfunc v1.9.0 // indirect
 	github.com/bytedance/sonic v1.9.1 // indirect
 	github.com/chenzhuoyu/base64x v0.0.0-20221115062448-fe3a3abad311 // indirect
@@ -48,11 +50,11 @@ require (
 	github.com/modern-go/reflect2 v1.0.2 // indirect
 	github.com/pelletier/go-toml/v2 v2.0.8 // indirect
 	github.com/pmezard/go-difflib v1.0.0 // indirect
+	github.com/stretchr/objx v0.5.0 // indirect
 	github.com/twitchyliquid64/golang-asm v0.15.1 // indirect
 	github.com/ugorji/go/codec v1.2.11 // indirect
 	go.opencensus.io v0.24.0 // indirect
 	golang.org/x/arch v0.3.0 // indirect
-	golang.org/x/crypto v0.9.0 // indirect
 	golang.org/x/net v0.10.0 // indirect
 	golang.org/x/oauth2 v0.6.0 // indirect
 	golang.org/x/sync v0.1.0 // indirect
