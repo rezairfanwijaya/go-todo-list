@@ -4,6 +4,7 @@ import (
 	"errors"
 	"go-todo-list/internal/model"
 	"log"
+	"regexp"
 	"testing"
 
 	"github.com/DATA-DOG/go-sqlmock"
@@ -29,13 +30,13 @@ func ConnectionMock() (*gorm.DB, sqlmock.Sqlmock) {
 	return dbConnection, mock
 }
 
+type args struct {
+	user model.User
+}
+
 func TestCreateUser(t *testing.T) {
 	dbConnection, mock := ConnectionMock()
 	repo := NewRepository(dbConnection)
-
-	type args struct {
-		user model.User
-	}
 
 	testCases := []struct {
 		name        string
@@ -81,9 +82,10 @@ func TestCreateUser(t *testing.T) {
 			if !testCase.wantError {
 				mock.ExpectBegin()
 
-				mock.ExpectExec("^INSERT INTO `users` \\(`email`,`password`\\) VALUES \\(\\?,\\?\\)$").WithArgs(testCase.args.user.Email, testCase.args.user.Password).WillReturnResult(sqlmock.NewResult(0, 1))
+				mock.ExpectExec(regexp.QuoteMeta("INSERT INTO `users` (`email`,`password`) VALUES (?,?)")).WithArgs(testCase.args.user.Email, testCase.args.user.Password).WillReturnResult(sqlmock.NewResult(0, 1))
 
 				mock.ExpectCommit()
+
 				actual, err := repo.Save(testCase.args.user)
 				assert.Equal(t, testCase.args.user, actual)
 				assert.Nil(t, err)
@@ -91,7 +93,7 @@ func TestCreateUser(t *testing.T) {
 				expectedError := errors.New("database error")
 				mock.ExpectBegin()
 
-				mock.ExpectExec("^INSERT INTO `users` \\(`email`,`password`\\) VALUES \\(\\?,\\?\\)$").WithArgs(testCase.args.user.Email, testCase.args.user.Password).WillReturnError(expectedError)
+				mock.ExpectExec(regexp.QuoteMeta("INSERT INTO `users` (`email`,`password`) VALUES (?,?)")).WithArgs(testCase.args.user.Email, testCase.args.user.Password).WillReturnError(expectedError)
 
 				mock.ExpectCommit()
 
@@ -103,4 +105,66 @@ func TestCreateUser(t *testing.T) {
 		})
 	}
 
+}
+
+func TestGetUserByEmail(t *testing.T) {
+	dbConnection, mock := ConnectionMock()
+	repo := NewRepository(dbConnection)
+
+	testCases := []struct {
+		name        string
+		email       string
+		expectation args
+		wantError   bool
+	}{
+		{
+			name:  "sucess",
+			email: "john@gmail.com",
+			expectation: args{
+				user: model.User{
+					ID:    1,
+					Email: "john@gmail.com",
+				},
+			},
+			wantError: false,
+		}, {
+			name:  "user not found",
+			email: "doe@gmail.com",
+			expectation: args{user: model.User{
+				ID:    0,
+				Email: "",
+			}},
+			wantError: false,
+		}, {
+			name:        "failed",
+			email:       "",
+			expectation: args{user: model.User{}},
+			wantError:   true,
+		},
+	}
+
+	for _, testCase := range testCases {
+		t.Run(testCase.name, func(t *testing.T) {
+			if !testCase.wantError {
+
+				rows := sqlmock.NewRows([]string{"id", "email"}).
+					AddRow(
+						testCase.expectation.user.ID,
+						testCase.expectation.user.Email,
+					)
+
+				mock.ExpectQuery(regexp.QuoteMeta("SELECT * FROM `users` WHERE email = ?")).WithArgs(testCase.email).WillReturnRows(rows)
+
+				actual, err := repo.GetUserByEmail(testCase.email)
+				assert.Equal(t, testCase.expectation.user, actual)
+				assert.Nil(t, err)
+			} else {
+				mock.ExpectQuery(regexp.QuoteMeta("SELECT * FROM `users` WHERE email = ?")).WithArgs(testCase.email).WillReturnError(errors.New("failed"))
+
+				actual, err := repo.GetUserByEmail(testCase.email)
+				assert.Equal(t, testCase.expectation.user, actual)
+				assert.NotNil(t, err)
+			}
+		})
+	}
 }
