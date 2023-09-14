@@ -168,3 +168,65 @@ func TestGetUserByEmail(t *testing.T) {
 		})
 	}
 }
+
+func TestUserByID(t *testing.T) {
+	dbConnection, mock := ConnectionMock()
+	repo := NewRepository(dbConnection)
+
+	testCase := []struct {
+		name        string
+		ID          uint
+		expectation args
+		wantError   bool
+	}{
+		{
+			name: "success",
+			ID:   1,
+			expectation: args{
+				user: model.User{
+					ID:       1,
+					Email:    "john@gmail.com",
+					Password: "12345678",
+				},
+			},
+			wantError: false,
+		},
+		{
+			name: "failed id not found",
+			ID:   90,
+			expectation: args{
+				user: model.User{
+					ID:       0,
+					Email:    "",
+					Password: "",
+				},
+			},
+			wantError: true,
+		},
+	}
+
+	for _, testCase := range testCase {
+		t.Run(testCase.name, func(t *testing.T) {
+			if !testCase.wantError {
+				rows := sqlmock.NewRows([]string{"id", "email", "password"}).
+					AddRow(
+						testCase.expectation.user.ID,
+						testCase.expectation.user.Email,
+						testCase.expectation.user.Password,
+					)
+
+				mock.ExpectQuery(regexp.QuoteMeta("SELECT * FROM `users` WHERE id = ?")).WillReturnRows(rows)
+
+				actual, err := repo.GetUserByID(testCase.ID)
+				assert.Equal(t, testCase.expectation.user, actual)
+				assert.Nil(t, err)
+			} else {
+				mock.ExpectQuery(regexp.QuoteMeta("SELECT * FROM `users` WHERE id = ?")).WillReturnError(errors.New("failed get id"))
+
+				actual, err := repo.GetUserByID(testCase.ID)
+				assert.Equal(t, testCase.expectation.user, actual)
+				assert.NotNil(t, err)
+			}
+		})
+	}
+}
